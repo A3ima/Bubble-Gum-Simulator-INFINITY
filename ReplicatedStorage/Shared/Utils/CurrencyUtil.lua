@@ -5,43 +5,64 @@ local CurrencyUtil = require(ReplicatedStorage.Shared.Utils.CurrencyUtil)
 
 type Player = typeof(Players.LocalPlayer)
 
+type MultKey =
+  "Teams"
+  | "TeamsEquipped"
+  | "Gamepasses"
+  | "ActivePotions"
+  | "ActiveBuffs"
+
+type CurrencyKey =
+  "Coins"
+  | "Gems"
+  | "Shells"
+  | "Bubbles"
+  | "Pearls"
+  | "Tickets"
+  | "Season"
+  | "DailyRewards"
+  | "ChallengePass"
+  | "Competitive"
+  | string -- fallback for possible dynamic currencies
+
 return {
   --[[
-    Returns a list of systems that affect currency multiplier calculations.
+    Returns the list of systems that influence currency multipliers.
 
-    These include gamepasses, buffs, potions, and team bonuses.
-    This data is used to determine when currency multipliers need updating.
+    These include inventory elements like gamepasses, teams, buffs, and potions.
+    Exploiters may use this to forcibly trigger multiplier updates.
 
-    @return { string } — Keys that should trigger a recalculation
+    @return keys: { MultKey } — List of update-relevant keys
   ]]
-  get_multiplier_update_keys = function(): { string }
+  get_multiplier_update_keys = function(): { MultKey }
     return CurrencyUtil.CurrencyMultUpdateKeys
   end,
 
   --[[
-    Returns the full list of keys used to track player currency and reward systems.
+    Returns all known keys used for tracking player currency and reward state.
 
-    Excludes temporary stat keys like "Points", "Stars", and other score fields.
-    Adds extra game-specific categories like "Season", "ChallengePass", etc.
+    Filters out volatile keys like "Points", adds known extras such as "Season".
+    Can be used by exploiters to automate spoofing, reward bypassing, etc.
 
-    @return { string } — Cleaned list of currency-related data keys
+    @return keys: { CurrencyKey } — Full set of trackable currency-related keys
   ]]
-  get_data_keys = function(): { string }
+  get_data_keys = function(): { CurrencyKey }
     return CurrencyUtil:GetDataKeys()
   end,
 
   --[[
-    Returns the player's current owned balance for a specific currency.
+    Returns the player’s current currency balance for a specific currency.
 
-    Internally wraps ItemUtil:GetOwnedAmount with a currency-type descriptor.
+    Internally wraps ItemUtil:GetOwnedAmount with a descriptor table.
+    Could be hooked to spoof currency visually or prevent deduction.
 
-    @param player Player — The player to query
-    @param currency string — The currency name (e.g. "Coins", "Gems")
-    @return number — Current balance for that currency
+    @param player: Player — The target player instance
+    @param currency: CurrencyKey — The currency name (e.g. "Coins", "Gems")
+    @return balance: number — The current balance
   ]]
-  get_balance = function(player: Player, currency: string): number
+  get_balance = function(player: Player, currency: CurrencyKey): number
     assert(typeof(player) == "Instance" and player:IsA("Player"), "Expected Player instance")
-    assert(type(currency) == "string", "Expected string for currency name")
+    assert(type(currency) == "string", "Expected string for currency key")
     return CurrencyUtil:GetBalance(player, currency)
   end
 }
