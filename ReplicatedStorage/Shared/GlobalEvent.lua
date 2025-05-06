@@ -1,6 +1,8 @@
-local GlobalEvent = require(game:GetService("ReplicatedStorage").Shared.GlobalEvent)
-local Time = require(game:GetService("ReplicatedStorage").Shared.Framework.Utilities.Math.Time)
+local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
 local Workspace = cloneref(game:GetService("Workspace"))
+
+local GlobalEvent = require(ReplicatedStorage.Shared.GlobalEvent)
+local Time = require(ReplicatedStorage.Shared.Framework.Utilities.Math.Time)
 
 type EventName = "Lucky" | "Hatching"
 type Callback = () -> ()
@@ -38,8 +40,8 @@ return {
   end,
 
   --[[
-    Hooks the original function connected to GlobalEvent.Began
-    and calls your callback when the specified event starts.
+    Hooks into the original function connected to GlobalEvent.Began.
+    Executes the callback if the fired event name matches.
 
     @param name: EventName
     @param callback: Callback
@@ -62,8 +64,8 @@ return {
   end,
 
   --[[
-    Hooks the original function connected to GlobalEvent.Ended
-    and calls your callback when the specified event ends.
+    Hooks into the original function connected to GlobalEvent.Ended.
+    Executes the callback if the fired event name matches.
 
     @param name: EventName
     @param callback: Callback
@@ -86,10 +88,10 @@ return {
   end,
 
   --[[
-    Spoofs an active event by setting its end time manually.
+    Spoofs an event by setting its expiration time manually in the Workspace attributes.
 
     @param name: EventName
-    @param duration: number (seconds from now)
+    @param duration: number — seconds from now
   ]]
   spoof_event = function(name: EventName, duration: number)
     assert(type(name) == "string", "Expected string for event name")
