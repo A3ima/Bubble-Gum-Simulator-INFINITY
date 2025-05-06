@@ -9,7 +9,10 @@ type Callback = () -> ()
 
 return {
   --[[
-    Returns whether the specified event is currently active.
+    Checks if a global event is currently active by consulting the game's internal time logic.
+
+    This calls GlobalEvent:IsActive, which checks if the event's stored end time (via Workspace attribute)
+    is still ahead of the current server time.
 
     @param name: EventName
     @return boolean
@@ -20,7 +23,9 @@ return {
   end,
 
   --[[
-    Returns the remaining time (in seconds) for an event.
+    Returns the number of seconds remaining until the specified event ends.
+
+    Internally uses GlobalEvent:GetRemainingTime, which compares the workspace attribute against Time.now().
 
     @param name: EventName
     @return number
@@ -31,7 +36,9 @@ return {
   end,
 
   --[[
-    Returns a list of currently active events.
+    Returns a list of all currently active events, as defined by internal Workspace state.
+
+    Useful to scan which timed events are considered running.
 
     @return { string }
   ]]
@@ -40,8 +47,9 @@ return {
   end,
 
   --[[
-    Hooks into the original function connected to GlobalEvent.Began.
-    Executes the callback if the fired event name matches.
+    Hooks into GlobalEvent.Began to execute a callback whenever a specific event starts.
+
+    This uses getconnections + hookfunction to intercept the Signal firing without creating a new connection.
 
     @param name: EventName
     @param callback: Callback
@@ -64,8 +72,9 @@ return {
   end,
 
   --[[
-    Hooks into the original function connected to GlobalEvent.Ended.
-    Executes the callback if the fired event name matches.
+    Hooks into GlobalEvent.Ended to execute a callback whenever a specific event ends.
+
+    This hijacks existing connections using hookfunction, instead of creating new listeners.
 
     @param name: EventName
     @param callback: Callback
@@ -88,14 +97,39 @@ return {
   end,
 
   --[[
-    Spoofs an event by setting its expiration time manually in the Workspace attributes.
+    Spoofs a global event by setting its end time to `duration` seconds from now.
+
+    This modifies Workspace attributes directly and forces the event into an active state.
 
     @param name: EventName
-    @param duration: number — seconds from now
+    @param duration: number — how many seconds until expiration
   ]]
   spoof_event = function(name: EventName, duration: number)
     assert(type(name) == "string", "Expected string for event name")
     assert(type(duration) == "number", "Expected number for duration")
     Workspace:SetAttribute(name, Time.now() + duration)
+  end,
+
+  --[[
+    Forces an event to immediately end by clearing its Workspace attribute.
+
+    This is useful for prematurely terminating events client-side, or triggering on_end hooks.
+
+    @param name: EventName
+  ]]
+  end_event_now = function(name: EventName)
+    assert(type(name) == "string", "Expected string for event name")
+    Workspace:SetAttribute(name, nil)
+  end,
+
+  --[[
+    Returns the raw expiration timestamp set for a given event (if any), without computing remaining time.
+
+    @param name: EventName
+    @return number?
+  ]]
+  get_raw_expiry = function(name: EventName): number?
+    assert(type(name) == "string", "Expected string for event name")
+    return Workspace:GetAttribute(name)
   end
 }
