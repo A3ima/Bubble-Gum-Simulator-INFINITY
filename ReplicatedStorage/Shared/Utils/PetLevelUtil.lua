@@ -9,11 +9,14 @@ type PetData = {
 
 return {
   --[[
-    Calculates the level a pet would be at based on raw XP.
+    Calculates the level a pet would reach given raw XP.
 
-    @param petName: string
-    @param xp: number
-    @return level: number
+    Wraps PetLevelUtil:GetLevelFromXP, which uses rarity-specific XP scaling
+    to determine the level corresponding to a specific XP amount.
+
+    @param petName string — The name of the pet type (used for rarity lookup)
+    @param xp number — The raw XP to evaluate
+    @return level number — The resulting level
   ]]
   get_level_from_xp = function(petName: string, xp: number): number
     assert(type(petName) == "string", "Expected string for pet name")
@@ -24,8 +27,11 @@ return {
   --[[
     Returns the current level of a pet based on its XP field.
 
-    @param pet: PetData
-    @return level: number
+    This wraps PetLevelUtil:GetLevelFromPet, which handles XP-to-level
+    mapping based on internal rarity and XP tables.
+
+    @param pet PetData — A structured pet object with Name and XP
+    @return level number — The pet’s current level
   ]]
   get_level_from_pet = function(pet: PetData): number
     assert(type(pet) == "table" and type(pet.Name) == "string", "Expected valid PetData")
@@ -33,11 +39,14 @@ return {
   end,
 
   --[[
-    Returns the total XP required to reach a specific level for a pet.
+    Returns the total XP required to reach a specific level.
 
-    @param petName: string
-    @param level: number
-    @return xp: number
+    Internally uses GetTotalXPForLevel to calculate the full XP needed,
+    based on the pet’s rarity and the input level.
+
+    @param petName string — Name of the pet (used to get rarity)
+    @param level number — Desired level to reach
+    @return xp number — Total XP needed to reach that level
   ]]
   get_total_xp_for_level = function(petName: string, level: number): number
     assert(type(petName) == "string", "Expected string for pet name")
@@ -46,11 +55,14 @@ return {
   end,
 
   --[[
-    Returns the XP needed to go from level n-1 to level n.
+    Returns the XP difference between level N-1 and level N.
 
-    @param petName: string
-    @param level: number
-    @return xp: number
+    This wraps GetMarginalXPForLevel, which calculates the delta in XP
+    needed to advance one level based on rarity curves.
+
+    @param petName string — The name of the pet
+    @param level number — The target level to evaluate
+    @return xp number — Marginal XP needed from the prior level
   ]]
   get_marginal_xp_for_level = function(petName: string, level: number): number
     assert(type(petName) == "string", "Expected string for pet name")
@@ -59,10 +71,12 @@ return {
   end,
 
   --[[
-    Returns how much XP a pet needs until it's fully maxed out.
+    Calculates how much XP is left until the pet reaches max level.
 
-    @param pet: PetData
-    @return xpRemaining: number
+    Internally checks the pet's rarity maximum XP and subtracts current XP.
+
+    @param pet PetData — A structured pet with Name and XP
+    @return xpRemaining number — Remaining XP to reach max
   ]]
   get_xp_until_max = function(pet: PetData): number
     assert(type(pet) == "table" and type(pet.Name) == "string" and type(pet.XP) == "number", "Expected valid PetData")
@@ -70,13 +84,15 @@ return {
   end,
 
   --[[
-    Calculates the XP and resulting level after applying XP to a pet.
+    Calculates the resulting XP and level after adding XP to a pet.
 
-    XP will be clamped to not exceed the maximum for the pet's rarity.
+    This internally clamps the XP to avoid exceeding the maximum and
+    recalculates the level after the gain is applied.
 
-    @param pet: PetData
-    @param gain: number
-    @return finalXP: number, finalLevel: number
+    @param pet PetData — Pet data before applying XP
+    @param gain number — Amount of XP to add
+    @return finalXP number — New total XP (clamped)
+    @return finalLevel number — Updated level after gain
   ]]
   calculate_given_xp = function(pet: PetData, gain: number): (number, number)
     assert(type(pet) == "table" and type(pet.Name) == "string" and type(pet.XP) == "number", "Expected valid PetData")
@@ -87,8 +103,10 @@ return {
   --[[
     Returns the maximum level possible for the given pet.
 
-    @param pet: PetData
-    @return maxLevel: number
+    Uses internal rarity data to fetch the configured level cap.
+
+    @param pet PetData — The pet to check
+    @return maxLevel number — The pet's level ceiling
   ]]
   get_max_level = function(pet: PetData): number
     assert(type(pet) == "table" and type(pet.Name) == "string", "Expected valid PetData")
@@ -96,10 +114,12 @@ return {
   end,
 
   --[[
-    Returns whether the pet has reached its maximum level.
+    Checks if a pet has reached its maximum level.
 
-    @param pet: PetData
-    @return boolean
+    Uses GetLevelFromPet and GetMaxLevel to compare current state.
+
+    @param pet PetData — The pet to check
+    @return boolean — True if max level is reached
   ]]
   is_max_level = function(pet: PetData): boolean
     assert(type(pet) == "table" and type(pet.Name) == "string", "Expected valid PetData")
